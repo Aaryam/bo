@@ -1,3 +1,4 @@
+import 'package:bo/misc/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:bo/main.dart';
 
@@ -14,7 +15,7 @@ class DetailsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Hero(
-      tag: destination,
+      tag: WaypointUtils.getWaypointName(destination),
       child: Padding(
         padding: const EdgeInsets.only(bottom: 10, top: 10),
         child: GestureDetector(
@@ -31,20 +32,20 @@ class DetailsCard extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  destination.length <= 8
-                      ? Text('$destination',
+                  WaypointUtils.getWaypointName(destination).length <= 8
+                      ? Text(WaypointUtils.getWaypointName(destination),
                           style: TextStyle(
                             fontSize: 16,
                             fontFamily: 'Poppins',
                             color: Colors.black87,
                           ))
-                      : Text(destination.substring(0, 8) + '...',
+                      : Text(WaypointUtils.getWaypointName(destination).substring(0, 8) + '...',
                           style: TextStyle(
                             fontSize: 16,
                             fontFamily: 'Poppins',
                             color: Colors.black87,
                           )),
-                  Text('$distance',
+                  Text(distance.toString().substring(0, distance.indexOf('.') + 3) + ' m',
                       style: TextStyle(
                         fontSize: 16,
                         fontFamily: 'Poppins',
@@ -59,8 +60,9 @@ class DetailsCard extends StatelessWidget {
               context,
               MaterialPageRoute(
                   builder: (context) => NavigatePage(
-                        tag: destination,
+                        tag: WaypointUtils.getWaypointName(destination),
                         title: '',
+                        destination: WaypointUtils.getWaypointPosition(destination),
                       )),
             );
           },

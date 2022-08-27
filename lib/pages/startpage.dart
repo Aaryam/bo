@@ -1,4 +1,5 @@
 import 'package:bo/main.dart';
+import 'package:bo/misc/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -42,8 +43,13 @@ class StartPage extends StatelessWidget {
         }
         else {
           return Container(
+            color: Colors.white,
+            height: 100,
+            width: 100,
             child: Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                color: ColorUtils.deepGreen,
+              ),
             ),
           );
         }

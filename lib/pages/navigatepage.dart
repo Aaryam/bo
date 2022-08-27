@@ -7,22 +7,22 @@ import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 
 class NavigatePage extends StatefulWidget {
-  const NavigatePage({Key? key, required this.title, required this.tag})
+  const NavigatePage(
+      {Key? key,
+      required this.title,
+      required this.tag,
+      required this.destination})
       : super(key: key);
 
   final String title;
   final String tag;
+  final Position destination;
 
   @override
   State<NavigatePage> createState() => NavigatePageState();
 }
 
 class NavigatePageState extends State<NavigatePage> {
-  Position destLoc = Position.fromMap({
-    'latitude': 20.36551233004221,
-    'longitude': 85.83476898478006,
-  });
-
   Position currentLoc = Position.fromMap({
     'latitude': 0.0,
     'longitude': 0.0,
@@ -36,19 +36,29 @@ class NavigatePageState extends State<NavigatePage> {
   double bearing = 0.0;
 
   @override
-  Widget build(BuildContext context) {
+  void dispose() {
+    positionStream.drain();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     positionStream.listen((Position position) {
       currentLoc = position;
-      print(currentLoc);
-      setState(() {
-        if (mounted) {
-          distance = Geolocator.distanceBetween(currentLoc.latitude,
-              currentLoc.longitude, destLoc.latitude, destLoc.longitude);
-          bearing = Geolocator.bearingBetween(currentLoc.latitude,
-              currentLoc.longitude, destLoc.latitude, destLoc.longitude);
-        }
-      });
+      if (mounted) {
+        setState(() {
+          distance = Geolocator.distanceBetween(
+              currentLoc.latitude,
+              currentLoc.longitude,
+              widget.destination.latitude,
+              widget.destination.longitude);
+          bearing = Geolocator.bearingBetween(
+              currentLoc.latitude,
+              currentLoc.longitude,
+              widget.destination.latitude,
+              widget.destination.longitude);
+        });
+      }
     });
 
     return Scaffold(
@@ -70,7 +80,11 @@ class NavigatePageState extends State<NavigatePage> {
                         angle: (direction * (pi / 180) * -1),
                         child: GestureDetector(
                           onTap: () async {
-                            currentLoc = await Geolocator.getCurrentPosition();
+                            if (mounted) {
+                              currentLoc =
+                                  await Geolocator.getCurrentPosition();
+                            }
+                            print(currentLoc);
                           },
                           child: Image.asset('assets/images/cool.png'),
                         ),

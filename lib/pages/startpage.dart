@@ -37,7 +37,7 @@ class StartPage extends StatelessWidget {
     return FutureBuilder<bool>(
       future: _determinePosition(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData == true) {
+        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
           return HomePage(title: '');
         }
         else {

@@ -16,3 +16,7 @@ class ColorUtils {
 
   static MaterialColor deepGreen = const MaterialColor(0xFF7FB373, deepGreenMap);
 }
+
+class LocationUtils {
+  
+}

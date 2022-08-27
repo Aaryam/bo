@@ -1,7 +1,7 @@
 import 'package:bo/pages/startpage.dart';
 import 'package:bo/widgets/detailscard.dart';
 import 'package:flutter/material.dart';
-import 'package:bo/utils/utils.dart';
+import 'package:bo/misc/utils.dart';
 
 void main() {
   runApp(const MyApp());
@@ -85,3 +85,5 @@ class HomePageState extends State<HomePage> {
     );
   }
 }
+
+// refer to this https://pub.dev/packages/flutter_compass/example

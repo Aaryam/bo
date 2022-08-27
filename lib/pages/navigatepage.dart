@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:math';
 
-import 'package:bo/utils/utils.dart';
+import 'package:bo/misc/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 
 class NavigatePage extends StatefulWidget {
@@ -17,8 +19,8 @@ class NavigatePage extends StatefulWidget {
 
 class NavigatePageState extends State<NavigatePage> {
   Position destLoc = Position.fromMap({
-    'latitude': 0.0,
-    'longitude': 0.0,
+    'latitude': 20.36551233004221,
+    'longitude': 85.83476898478006,
   });
 
   Position currentLoc = Position.fromMap({
@@ -28,12 +30,25 @@ class NavigatePageState extends State<NavigatePage> {
 
   Stream<Position> positionStream = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.bestForNavigation, distanceFilter: 0));
+          accuracy: LocationAccuracy.best, distanceFilter: 1));
+
+  double distance = 0.0;
+  double bearing = 0.0;
 
   @override
   Widget build(BuildContext context) {
+
     positionStream.listen((Position position) {
       currentLoc = position;
+      print(currentLoc);
+      setState(() {
+        if (mounted) {
+          distance = Geolocator.distanceBetween(currentLoc.latitude,
+              currentLoc.longitude, destLoc.latitude, destLoc.longitude);
+          bearing = Geolocator.bearingBetween(currentLoc.latitude,
+              currentLoc.longitude, destLoc.latitude, destLoc.longitude);
+        }
+      });
     });
 
     return Scaffold(
@@ -45,13 +60,36 @@ class NavigatePageState extends State<NavigatePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              RotationTransition(
-                turns: const AlwaysStoppedAnimation(90 / 360),
-                child: Image.asset('assets/images/cool.png'),
+              StreamBuilder<CompassEvent>(
+                stream: FlutterCompass.events,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    double? direction = snapshot.data!.heading! + bearing;
+                    return Center(
+                      child: Transform.rotate(
+                        angle: (direction * (pi / 180) * -1),
+                        child: GestureDetector(
+                          onTap: () async {
+                            currentLoc = await Geolocator.getCurrentPosition();
+                          },
+                          child: Image.asset('assets/images/cool.png'),
+                        ),
+                      ),
+                    );
+                  } else if (snapshot.hasError) {
+                    return Text(snapshot.error.toString());
+                  } else {
+                    return const CircularProgressIndicator();
+                  }
+                },
               ),
-              Text(Geolocator.distanceBetween(currentLoc.latitude,
-                      currentLoc.longitude, destLoc.latitude, destLoc.longitude)
-                  .toString()),
+              Padding(
+                padding: EdgeInsets.all(20),
+              ),
+              Text(distance.toStringAsFixed(2) + ' m',
+                  style: TextStyle(
+                    fontSize: 20,
+                  )),
             ],
           ),
         ),

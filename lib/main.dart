@@ -1,4 +1,5 @@
 import 'package:bo/pages/startpage.dart';
+import 'package:bo/widgets/addwaypointdialog.dart';
 import 'package:bo/widgets/detailscard.dart';
 import 'package:flutter/material.dart';
 import 'package:bo/misc/utils.dart';
@@ -37,6 +38,7 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   final searchController = TextEditingController();
+  final addWaypointController = TextEditingController();
 
   Stream<Position> positionStream = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
@@ -57,14 +59,12 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     positionStream.listen((Position position) {
       if (mounted) {
-        setState(() {
-          currentLoc = position;
-        });
+        currentLoc = position;
       }
     });
 
     return Scaffold(
-      body: GestureDetector(
+      body: RefreshIndicator(
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: ListView(
@@ -88,75 +88,101 @@ class HomePageState extends State<HomePage> {
                     fontFamily: 'Poppins',
                   ),
                   onChanged: (val) async {
-                    WaypointUtils.addWaypoint(
-                        'Test',
-                        Position.fromMap({
-                          'latitude': 100.0,
-                          'longitude': 100.0,
-                        }),
+                    WaypointUtils.clearWaypoints(
                         await SharedPreferences.getInstance());
                   },
                 ),
               ),
-              FutureBuilder<SharedPreferences>(
-                future: SharedPreferences.getInstance(),
-                builder: (prefContext, sharedPreferences) {
-                  if (sharedPreferences.connectionState ==
-                          ConnectionState.done &&
-                      sharedPreferences.hasData) {
-                    int waypointCount = WaypointUtils.getWaypoints(
-                            sharedPreferences.data as SharedPreferences)
-                        .length;
+              FutureBuilder<Position>(builder: (locationContext, initialCurrentPos) {
+                if (initialCurrentPos.hasData &&
+                    initialCurrentPos.connectionState == ConnectionState.done) {
+                      currentLoc = initialCurrentPos.data ?? currentLoc;
+                  return FutureBuilder<SharedPreferences>(
+                    future: SharedPreferences.getInstance(),
+                    builder: (prefContext, sharedPreferences) {
+                      if (sharedPreferences.connectionState ==
+                              ConnectionState.done &&
+                          sharedPreferences.hasData) {
+                        int waypointCount = WaypointUtils.getWaypoints(
+                                sharedPreferences.data as SharedPreferences)
+                            .length;
 
-                    return Container(
-                      height: MediaQuery.of(context).size.height * 0.8,
-                      child: ListView.builder(
-                        itemBuilder: (context, currentWaypointIndex) {
-                          String waypoint = WaypointUtils.getWaypoints(
-                              sharedPreferences.data
-                                  as SharedPreferences)[currentWaypointIndex];
+                        return Container(
+                          height: MediaQuery.of(context).size.height * 0.82,
+                          child: ListView.builder(
+                            physics: BouncingScrollPhysics(),
+                            itemBuilder: (context, currentWaypointIndex) {
+                              String waypoint = WaypointUtils.getWaypoints(
+                                      sharedPreferences.data
+                                          as SharedPreferences)[
+                                  currentWaypointIndex];
 
-                          return waypoint != ''
-                              ? DetailsCard(
-                                  destination: waypoint,
-                                  distance: Geolocator.distanceBetween(
-                                              currentLoc.latitude,
-                                              currentLoc.longitude,
-                                              WaypointUtils.getWaypointLatitude(
-                                                  waypoint),
-                                              WaypointUtils
-                                                  .getWaypointLongitude(
-                                                      waypoint))
-                                          .toString() +
-                                      ' m')
-                              : Container();
-                        },
-                        itemCount: waypointCount,
+                              return waypoint != ''
+                                  ? DetailsCard(
+                                      destination: waypoint,
+                                      distance: Geolocator.distanceBetween(
+                                                  currentLoc.latitude,
+                                                  currentLoc.longitude,
+                                                  WaypointUtils
+                                                      .getWaypointLatitude(
+                                                          waypoint),
+                                                  WaypointUtils
+                                                      .getWaypointLongitude(
+                                                          waypoint))
+                                              .toString() +
+                                          ' m')
+                                  : Container();
+                            },
+                            itemCount: waypointCount,
+                          ),
+                        );
+                      } else {
+                        return Center(
+                          child: Container(
+                            height: 100,
+                            width: 100,
+                            color: Colors.white,
+                            child: CircularProgressIndicator(
+                              color: ColorUtils.deepGreen,
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                  );
+                } else {
+                  return Center(
+                    child: Container(
+                      height: 100,
+                      width: 100,
+                      color: Colors.white,
+                      child: CircularProgressIndicator(
+                        color: ColorUtils.deepGreen,
                       ),
-                    );
-                  } else {
-                    return Center(
-                      child: Container(
-                        height: 100,
-                        width: 100,
-                        color: Colors.white,
-                        child: CircularProgressIndicator(
-                          color: ColorUtils.deepGreen,
-                        ),
-                      ),
-                    );
-                  }
-                },
+                    ),
+                  );
+                }
+              },
+              future: Geolocator.getCurrentPosition(),
               ),
             ],
           ),
         ),
-        onTap: () {
+        onRefresh: () async {
           setState(() {});
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () async {
+          await showDialog(
+              context: context,
+              builder: (context) {
+                return AddWaypointDialog(
+                    context: context,
+                    addWaypointController: addWaypointController);
+              });
+          setState(() {});
+        },
         tooltip: 'Add quote',
         child: const Icon(Icons.add),
         backgroundColor: ColorUtils.deepGreen,

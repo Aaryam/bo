@@ -16,8 +16,8 @@ class ColorUtils {
     900: Color.fromRGBO(127, 179, 115, 1),
   };
 
-  static MaterialColor deepGreen =
-      const MaterialColor(0xFF7FB373, deepGreenMap);
+  static const MaterialColor deepGreen =
+      MaterialColor(0xFF7FB373, deepGreenMap);
 }
 
 class WaypointUtils {
@@ -79,5 +79,17 @@ class WaypointUtils {
 
   static String getWaypointName(String waypoint) {
     return waypoint.split(":")[0];
+  }
+
+  static Future<bool> removeWaypoint(String waypoint, SharedPreferences sharedPreferences) {
+    List<String> waypointList = getWaypoints(sharedPreferences);
+
+    for (var w in waypointList) {
+      if (w == waypoint) {
+        waypointList.remove(w);
+      }
+    }
+
+    return sharedPreferences.setString('waypoints', waypointList.join());
   }
 }
